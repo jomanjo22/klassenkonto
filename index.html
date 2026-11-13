@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Klassenkonto">
+<meta name="theme-color" content="#4f46e5">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Klassenkonto</title>
+<style>
+:root{--bg:#f4f5fb;--ink:#1e1b4b;--muted:#6b7280;--acc:#4f46e5;--acc2:#7c3aed;--ok:#16a34a;--line:#e5e7eb}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:16px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+body{padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.top{position:sticky;top:0;z-index:5;background:rgba(244,245,251,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:calc(10px + env(safe-area-inset-top)) 12px 8px;border-bottom:1px solid var(--line)}
+.row{display:flex;align-items:center;gap:8px}
+.sp{flex:1}
+.cls{position:relative;font-weight:800;font-size:20px;padding:5px 12px;border-radius:12px;background:#fff;border:1px solid var(--line);display:flex;gap:6px;align-items:center;margin:0;color:var(--ink)}
+.cls select{position:absolute;inset:0;opacity:0;width:100%;font-size:16px}
+.ib{width:40px;height:40px;border-radius:12px;background:#fff;border:1px solid var(--line);font-size:18px;display:grid;place-items:center;flex:none}
+.ib:disabled{opacity:.35}
+.goal{margin-top:8px}
+.gl{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);margin-bottom:4px}
+.gl span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:12px;border-radius:99px;background:#e0e7ff;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:99px;transition:width .5s}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;padding:12px}
+@media (max-width:440px){.row{gap:5px}.ib{width:34px;height:34px;font-size:15px;border-radius:10px}.cls{font-size:17px;padding:4px 8px}.grid{grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px;padding:10px}.tile .p{font-size:24px!important}}
+.tile{position:relative;background:#fff;border-radius:16px;padding:12px 6px 10px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.05),0 3px 10px rgba(79,70,229,.07);border:2px solid transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;transition:transform .12s,border-color .12s}
+.tile .n{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .p{font-size:28px;font-weight:800;color:var(--acc);margin-top:2px}
+.tile.cold{border:2px dashed #fbbf24}
+.tile.pressing{transform:scale(.94);border-color:var(--acc2)}
+.fly{position:absolute;left:50%;top:25%;transform:translateX(-50%);font-weight:800;color:var(--ok);font-size:24px;pointer-events:none;animation:fly .9s ease-out forwards}
+@keyframes fly{to{transform:translate(-50%,-44px);opacity:0}}
+.hint{font-size:12px;color:var(--muted);text-align:center;padding:0 16px;margin:4px 0 110px}
+.dash{border:1.5px dashed #fbbf24;padding:0 4px;border-radius:4px}
+.bottom{position:fixed;left:0;right:0;bottom:0;padding:16px 12px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(rgba(244,245,251,0),var(--bg) 40%);display:flex;justify-content:center;pointer-events:none}
+.bottom .btn{pointer-events:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-radius:14px;background:var(--acc);color:#fff;font-weight:700;box-shadow:0 4px 14px rgba(79,70,229,.3)}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn.danger{background:#dc2626;box-shadow:none}
+#sheet{position:fixed;inset:0;z-index:20;display:none;background:rgba(15,23,42,.42);align-items:flex-end;justify-content:center}
+#sheet.on{display:flex}
+#sheet.center{align-items:center}
+.sh{background:#fff;width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));animation:up .2s ease-out}
+#sheet.center .sh{border-radius:22px;max-width:440px;margin:16px;text-align:center}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sh h3{margin:0 0 12px;font-size:20px}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cat{padding:14px 10px;border-radius:14px;background:#eef2ff;font-weight:700;text-align:left;display:flex;gap:8px;align-items:center;font-size:15px}
+.cat .e{font-size:24px}
+.cat small{margin-left:auto;color:var(--acc);font-size:15px}
+.cat.neg{background:#fef2f2;color:#b91c1c}
+.cat.neg small{color:#b91c1c}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:12px;display:none;gap:14px;align-items:center;z-index:30;font-size:14px;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+#toast.on{display:flex}
+#toast button{color:#a5b4fc;font-weight:700}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
+.page{padding:12px;max-width:900px;margin:0 auto 40px}
+.card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;border:1px solid var(--line)}
+.card h2{font-size:17px;margin:0 0 10px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.zero td{background:#fffbeb}
+.seg{display:flex;background:#e5e7eb;border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px 6px;border-radius:9px;font-size:14px;font-weight:600}
+.seg button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+input,textarea{font:inherit;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
+textarea{min-height:240px;resize:vertical}
+label.l{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+.catrow{display:grid;grid-template-columns:40px 54px 1fr 62px 40px;gap:6px;margin-bottom:6px;align-items:center}
+.catrow input{padding:8px;text-align:center}
+.catrow input.nm{text-align:left}
+.small{font-size:12.5px;color:var(--muted)}
+.wrap{display:flex;flex-wrap:wrap;gap:8px}
+.kpi{flex:1;min-width:100px;background:#eef2ff;border-radius:12px;padding:10px;text-align:center;font-size:13px;color:var(--muted)}
+.kpi b{display:block;font-size:26px;color:var(--acc)}
+.pill{background:#fffbeb;border:1px solid #fde68a;padding:6px 10px;border-radius:99px;font-size:14px}
+.hist{padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+/* Klassenansicht */
+.cv{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6vh 5vw;text-align:center;background:radial-gradient(circle at 15% 10%,#e0e7ff,transparent 50%),radial-gradient(circle at 90% 90%,#fae8ff,transparent 45%),#fff}
+.cv .k{font-size:clamp(15px,2.3vw,26px);color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.cv h1{font-size:clamp(30px,6vw,76px);margin:.15em 0 .5em;line-height:1.1}
+.big{width:min(1100px,90vw);height:clamp(38px,8vh,84px);border-radius:999px;background:#e0e7ff;overflow:hidden;position:relative;box-shadow:inset 0 2px 6px rgba(0,0,0,.08)}
+.big>i{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,#4f46e5,#7c3aed,#ec4899);background-size:200% 100%;animation:shim 4s linear infinite;transition:width .8s}
+@keyframes shim{to{background-position:-200% 0}}
+.ms{position:absolute;top:18%;bottom:18%;width:3px;background:rgba(255,255,255,.7);border-radius:2px}
+.cv .num{font-size:clamp(28px,5.5vw,64px);font-weight:800;margin-top:.35em}
+.cv .msg{font-size:clamp(18px,2.8vw,32px);margin-top:.2em}
+.today{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:1.2vh}
+.chip{background:#fff;border-radius:16px;padding:10px 18px;font-size:clamp(15px,2vw,24px);box-shadow:0 2px 10px rgba(79,70,229,.12)}
+.cv .back{position:fixed;top:calc(10px + env(safe-area-inset-top));left:calc(12px + env(safe-area-inset-left));opacity:.55}
+.cv .fs{position:fixed;top:calc(10px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));opacity:.55}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="sheet"></div>
+<div id="toast"></div>
+<canvas id="fx"></canvas>
+<script>
+'use strict';
+/* Klassenkonto – offline Belohnungssystem. Alle Daten bleiben im Browser-Speicher dieses Geräts.
+   Erstellt mit KI-Unterstützung (Claude, Anthropic). */
+const KEY='klassenkonto_v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-5);
+const fmtD=t=>new Date(t).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});
+
+const DEFAULT_CATS=()=>[
+  {id:uid(),e:'🙋',n:'Mitarbeit',p:1},
+  {id:uid(),e:'🤝',n:'Hilfsbereitschaft',p:1},
+  {id:uid(),e:'🤫',n:'Ruhe & Konzentration',p:1},
+  {id:uid(),e:'🎒',n:'Material & HA',p:1},
+  {id:uid(),e:'⭐',n:'Besondere Leistung',p:2}];
+function newClass(name,n){
+  return {id:uid(),name,students:Array.from({length:n},(_,i)=>({id:uid(),name:'S'+String(i+1).padStart(2,'0')})),
+    cats:DEFAULT_CATS(),goal:{target:200,reward:'Spielestunde',start:Date.now()},history:[],events:[]};
+}
+function defaults(){const c=newClass('W7a',24);return {v:1,active:c.id,classes:{[c.id]:c},lastExport:0};}
+function load(){try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);if(d&&d.classes&&Object.keys(d.classes).length)return d;}}catch(e){}return defaults();}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('⚠️ Speichern fehlgeschlagen – bitte Sicherung exportieren!');}}
+
+let S=load();
+let view='teacher',statPeriod='week',sheetAt=0,toastTimer=null;
+const C=()=>S.classes[S.active]||S.classes[(S.active=Object.keys(S.classes)[0])];
+
+function startOf(p){const d=new Date();d.setHours(0,0,0,0);
+  if(p==='today')return +d;
+  if(p==='week'){d.setDate(d.getDate()-((d.getDay()+6)%7));return +d;}
+  if(p==='goal')return C().goal.start;
+  return 0;}
+function goalSum(c){return c.events.reduce((a,e)=>e.t>=c.goal.start?a+e.p:a,0);}
+function pointsBy(c,since){const m={};for(const e of c.events){if(e.t<since||!e.s)continue;m[e.s]=(m[e.s]||0)+e.p;}return m;}
+
+/* ---------- Ansichten ---------- */
+function render(){
+  const app=$('#app');
+  if(view==='teacher')app.innerHTML=vTeacher();
+  else if(view==='class')app.innerHTML=vClass();
+  else if(view==='stats')app.innerHTML=vStats();
+  else app.innerHTML=vSettings();
+}
+function goalBlock(c){const s=goalSum(c),t=c.goal.target||1,pct=Math.min(100,Math.max(0,s/t*100));
+  return `<div class="goal"><div class="gl"><span>🎯 Klassenziel: ${esc(c.goal.reward)}</span><span><b>${s}</b> / ${t}</span></div><div class="bar"><i style="width:${pct}%"></i></div></div>`;}
+function pageTop(title){const c=C();
+  return `<div class="top"><div class="row"><button class="ib" data-act="go" data-v="teacher" aria-label="Zurück">←</button><b style="font-size:20px">${title}</b><div class="sp"></div><span class="small">${esc(c.name)}</span></div></div>`;}
+
+function vTeacher(){
+  const c=C(),pts=pointsBy(c,c.goal.start),wk=pointsBy(c,startOf('week'));
+  const opts=Object.values(S.classes).map(k=>`<option value="${k.id}"${k.id===c.id?' selected':''}>${esc(k.name)}</option>`).join('');
+  const due=c.events.length>0&&Date.now()-(S.lastExport||0)>14*864e5;
+  const q=c.cats[0];
+  return `<div class="top"><div class="row">
+    <label class="cls">${esc(c.name)} <span class="small">▾</span><select data-act="cls" aria-label="Klasse wählen">${opts}</select></label>
+    <div class="sp"></div>
+    ${due?'<button class="ib" data-act="go" data-v="settings" title="Sicherung fällig">💾</button>':''}
+    <button class="ib" data-act="undo" ${c.events.length?'':'disabled'} title="Letzte Buchung rückgängig">↶</button>
+    <button class="ib" data-act="go" data-v="class" title="Klassenansicht (Beamer)">📽️</button>
+    <button class="ib" data-act="go" data-v="stats" title="Statistik">📊</button>
+    <button class="ib" data-act="go" data-v="settings" title="Einstellungen">⚙️</button>
+  </div>${goalBlock(c)}</div>
+  <div class="grid">${c.students.map(s=>`<div class="tile${wk[s.id]?'':' cold'}" data-sid="${s.id}"><div class="n">${esc(s.name)}</div><div class="p">${pts[s.id]||0}</div></div>`).join('')}</div>
+  ${c.students.length?'':'<p class="hint" style="margin:30px 0">Noch keine Namen – unter ⚙️ Einstellungen eintragen.</p>'}
+  <p class="hint">Tippen = +${q?q.p:1} ${esc(q?q.e+' '+q.n:'')} · Lange drücken = Kategorie wählen · <span class="dash">gestrichelt</span> = diese Woche noch kein Punkt · Zahl = Punkte seit Zielstart</p>
+  <div class="bottom"><button class="btn" data-act="classpt">🌟 +1 ganze Klasse</button></div>`;
+}
+
+function vClass(){
+  const c=C(),s=goalSum(c),t=c.goal.target||1,pct=Math.min(100,Math.max(0,s/t*100)),rest=Math.max(0,t-s);
+  const since=startOf('today'),byCat={};let cls=0;
+  for(const e of c.events){if(e.t<since)continue;if(e.c==='class'){cls+=e.p;continue;}if(e.p>0)byCat[e.c]=(byCat[e.c]||0)+e.p;}
+  const chips=c.cats.filter(k=>byCat[k.id]).map(k=>`<div class="chip">${esc(k.e)} ${esc(k.n)} <b>${byCat[k.id]}</b></div>`).join('')+(cls?`<div class="chip">🌟 Klassenpunkte <b>${cls}</b></div>`:'');
+  return `<div class="cv">
+    <button class="ib back" data-act="go" data-v="teacher" aria-label="Zurück">←</button>
+    <button class="ib fs" data-act="fs" aria-label="Vollbild">⛶</button>
+    <div class="k">Klasse ${esc(c.name)} · Unser gemeinsames Ziel</div>
+    <h1>🎁 ${esc(c.goal.reward)}</h1>
+    <div class="big"><i style="width:${pct}%"></i>${[25,50,75].map(m=>`<span class="ms" style="left:${m}%"></span>`).join('')}</div>
+    <div class="num">${s} <span style="color:var(--muted);font-weight:600">/ ${t} Punkte</span></div>
+    <div class="msg">${rest?`Noch <b>${rest}</b> Punkte – ihr schafft das! 💪`:'🎉 Ziel erreicht! 🎉'}</div>
+    ${chips?`<div class="k" style="margin-top:5vh">Heute gesammelt</div><div class="today">${chips}</div>`:''}
+  </div>`;
+}
+
+function vStats(){
+  const c=C(),since=startOf(statPeriod),m={},tot={};let cls=0;
+  for(const e of c.events){if(e.t<since)continue;if(!e.s){cls+=e.p;continue;}
+    const r=m[e.s]||(m[e.s]={});r[e.c]=(r[e.c]||0)+e.p;tot[e.s]=(tot[e.s]||0)+e.p;}
+  const hasNeg=c.students.some(s=>m[s.id]&&m[s.id].neg);
+  const cols=c.cats.map(k=>({id:k.id,h:k.e,t:k.n})).concat(hasNeg?[{id:'neg',h:'↩︎',t:'Korrektur'}]:[]);
+  const zero=c.students.filter(s=>!tot[s.id]);
+  const sum=Object.values(tot).reduce((a,b)=>a+b,0)+cls;
+  const per=[['today','Heute'],['week','Woche'],['goal','Zielperiode'],['all','Gesamt']];
+  return pageTop('Statistik')+`<div class="page">
+    <div class="seg">${per.map(([v,l])=>`<button data-act="period" data-v="${v}" class="${statPeriod===v?'on':''}">${l}</button>`).join('')}</div>
+    <div class="card" style="margin-top:12px"><div class="wrap">
+      <div class="kpi"><b>${sum}</b>Punkte gesamt</div>
+      <div class="kpi"><b>${cls}</b>Klassenpunkte</div>
+      <div class="kpi"><b>${zero.length}</b>noch ohne Punkt</div></div></div>
+    ${zero.length&&c.students.length?`<div class="card"><h2>🔎 Noch ohne Punkt (${zero.length})</h2><div class="wrap">${zero.map(s=>`<span class="pill">${esc(s.name)}</span>`).join('')}</div></div>`:''}
+    <div class="card"><h2>Übersicht</h2><div class="tablewrap"><table>
+      <thead><tr><th>Name</th>${cols.map(k=>`<th title="${esc(k.t)}">${esc(k.h)}</th>`).join('')}<th>Σ</th></tr></thead>
+      <tbody>${c.students.map(s=>`<tr class="${tot[s.id]?'':'zero'}"><td>${esc(s.name)}</td>${cols.map(k=>`<td>${(m[s.id]&&m[s.id][k.id])||'·'}</td>`).join('')}<td><b>${tot[s.id]||0}</b></td></tr>`).join('')}</tbody>
+    </table></div><p class="small">${cols.map(k=>esc(k.h+' '+k.t)).join(' · ')}</p></div>
+    ${c.history.length?`<div class="card"><h2>🏆 Erreichte Ziele</h2>${c.history.slice().reverse().map(h=>`<div class="hist"><b>${esc(h.reward)}</b> – ${h.sum}/${h.target} Punkte · ${fmtD(h.start)} bis ${fmtD(h.end)}</div>`).join('')}</div>`:''}
+  </div>`;
+}
+
+function vSettings(){
+  const c=C();
+  return pageTop('Einstellungen')+`<div class="page">
+    <div class="card"><h2>Klasse</h2>
+      <label class="l">Name der Klasse</label><input data-f="cname" value="${esc(c.name)}">
+      <div class="wrap" style="margin-top:10px"><button class="btn sec" data-act="addclass">＋ Neue Klasse</button><button class="btn sec" data-act="delclass">🗑 Diese Klasse löschen</button></div></div>
+    <div class="card"><h2>Schülerinnen & Schüler (${c.students.length})</h2>
+      <p class="small">Eine Zeile pro Person. Datenschutz: am besten nur Vornamen oder Kürzel. Zum Umbenennen einfach die Zeile ändern – die Punkte bleiben erhalten.</p>
+      <textarea data-f="students" spellcheck="false">${esc(c.students.map(s=>s.name).join('\n'))}</textarea>
+      <button class="btn" data-act="savestudents" style="margin-top:8px">Liste übernehmen</button></div>
+    <div class="card"><h2>Kategorien</h2>
+      <p class="small">Die oberste Kategorie wird beim kurzen Tippen vergeben (mit ▲ nach oben schieben). Spalten: Emoji · Name · Punkte</p>
+      ${c.cats.map((k,i)=>`<div class="catrow" data-i="${i}"><button class="ib" data-act="upcat" data-i="${i}" ${i?'':'disabled'}>▲</button><input data-f="ce" value="${esc(k.e)}"><input class="nm" data-f="cn" value="${esc(k.n)}"><input data-f="cp" type="number" inputmode="numeric" min="1" max="10" value="${k.p}"><button class="ib" data-act="delcat" data-i="${i}">✕</button></div>`).join('')}
+      <button class="btn sec" data-act="addcat">＋ Kategorie</button></div>
+    <div class="card"><h2>Klassenziel</h2>
+      <label class="l">Belohnung</label><input data-f="reward" value="${esc(c.goal.reward)}">
+      <label class="l">Punkte bis zum Ziel</label><input data-f="target" type="number" inputmode="numeric" min="1" value="${c.goal.target}">
+      <p class="small">Aktuell ${goalSum(c)} Punkte, gesammelt seit ${fmtD(c.goal.start)}.</p>
+      <button class="btn" data-act="newgoal">🏁 Ziel abschließen & neu starten</button></div>
+    <div class="card"><h2>Datensicherung</h2>
+      <p class="small">Alle Daten liegen ausschließlich auf diesem iPad im Browser-Speicher – nichts wird ins Internet übertragen. Bitte regelmäßig sichern (z. B. in die Dateien-App). Letzte Sicherung: <b>${S.lastExport?fmtD(S.lastExport):'noch nie'}</b></p>
+      <div class="wrap"><button class="btn" data-act="export">💾 Sicherung exportieren</button>
+      <label class="btn sec">📂 Sicherung importieren<input type="file" accept="application/json,.json" data-act="import" hidden></label></div></div>
+    <div class="card"><h2>Zurücksetzen</h2><div class="wrap">
+      <button class="btn sec" data-act="clearpts">Punkte dieser Klasse löschen</button>
+      <button class="btn danger" data-act="reset">Alles löschen</button></div></div>
+    <p class="small" style="text-align:center">Klassenkonto · läuft offline · Erstellt mit KI-Unterstützung (Claude, Anthropic) – Kennzeichnung gem. EU AI Act Art. 50</p>
+  </div>`;
+}
+
+/* ---------- Aktionen ---------- */
+function addEvent(s,cat,p){
+  const c=C(),before=goalSum(c);
+  c.events.push({id:uid(),t:Date.now(),s,c:cat,p});save();render();
+  if(s){const el=document.querySelector(`.tile[data-sid="${s}"]`);
+    if(el){const f=document.createElement('span');f.className='fly';f.textContent=(p>0?'+':'')+p;if(p<0)f.style.color='#dc2626';el.appendChild(f);setTimeout(()=>f.remove(),950);}}
+  const who=s?((c.students.find(x=>x.id===s)||{}).name||''):'Ganze Klasse';
+  const k=c.cats.find(x=>x.id===cat);
+  const lab=cat==='class'?'🌟 Klassenpunkt':cat==='neg'?'↩︎ Korrektur':(k?k.e+' '+k.n:'');
+  toast(`<span><b>${esc(who)}</b> ${p>0?'+':''}${p} · ${esc(lab)}</span>`,true);
+  const after=goalSum(c);
+  if(before<c.goal.target&&after>=c.goal.target)celebrate(c);
+}
+function undo(){const c=C();const e=c.events.pop();if(!e)return;save();render();
+  const who=e.s?((c.students.find(x=>x.id===e.s)||{}).name||''):'Ganze Klasse';
+  toast(`<span>Rückgängig: ${esc(who)} ${e.p>0?'+':''}${e.p}</span>`);}
+
+function saveStudents(){
+  const c=C();
+  const names=$('[data-f="students"]').value.split('\n').map(x=>x.trim()).filter(Boolean);
+  const old=c.students.slice(),used=new Set();
+  const res=names.map(n=>{const m=old.find(o=>o.name===n&&!used.has(o.id));if(m){used.add(m.id);return {id:m.id,name:n};}return {id:null,name:n};});
+  const left=old.filter(o=>!used.has(o.id));
+  const sameCount=names.length===old.length;
+  for(const r of res){if(!r.id){const o=sameCount?left.shift():null;r.id=o?o.id:uid();}}
+  const removed=sameCount?[]:left;
+  const withPts=removed.filter(o=>c.events.some(e=>e.s===o.id));
+  if(withPts.length&&!confirm(`Entfernt werden: ${withPts.map(o=>o.name).join(', ')}.\nDeren Punkte erscheinen dann nicht mehr in der Statistik. Fortfahren?`))return;
+  c.students=res;save();render();toast('Liste gespeichert ✔');
+}
+
+async function exportData(){
+  const json=JSON.stringify(S),name=`klassenkonto-sicherung-${new Date().toISOString().slice(0,10)}.json`;
+  try{const file=new File([json],name,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return markExp();}}
+  catch(e){if(e&&e.name==='AbortError')return;}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download=name;
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);markExp();
+}
+function markExp(){S.lastExport=Date.now();save();render();toast('Sicherung erstellt ✔');}
+function importFile(f){
+  if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d||!d.classes||!Object.keys(d.classes).length)throw 0;
+    if(!confirm('Sicherung laden? Die aktuellen Daten auf diesem iPad werden dabei ersetzt.'))return;
+    S=d;save();view='teacher';render();toast('Sicherung geladen ✔');}
+    catch(e){alert('Diese Datei ist keine gültige Klassenkonto-Sicherung.');}};
+  r.readAsText(f);
+}
+
+function act(a,b){
+  const c=C();
+  switch(a){
+  case 'go':view=b.dataset.v;closeSheet();$('#toast').classList.remove('on');render();window.scrollTo(0,0);break;
+  case 'undo':undo();break;
+  case 'classpt':addEvent(null,'class',1);break;
+  case 'fs':{const d=document.documentElement,f=d.requestFullscreen||d.webkitRequestFullscreen;if(f)try{f.call(d);}catch(e){}break;}
+  case 'period':statPeriod=b.dataset.v;render();break;
+  case 'pick':if(Date.now()-sheetAt<350)return;closeSheet();addEvent(b.dataset.s,b.dataset.c,+b.dataset.p);break;
+  case 'close':closeSheet();break;
+  case 'addclass':{const n=prompt('Name der neuen Klasse (z. B. W8b):');if(!n||!n.trim())return;const k=newClass(n.trim(),0);S.classes[k.id]=k;S.active=k.id;save();render();toast('Klasse angelegt – jetzt die Namen eintragen');break;}
+  case 'delclass':if(Object.keys(S.classes).length<2)return toast('Mindestens eine Klasse muss bleiben');
+    if(!confirm(`Klasse „${c.name}“ mit allen Punkten endgültig löschen?`))return;
+    delete S.classes[c.id];S.active=Object.keys(S.classes)[0];save();render();break;
+  case 'savestudents':saveStudents();break;
+  case 'addcat':c.cats.push({id:uid(),e:'✨',n:'Neue Kategorie',p:1});save();render();break;
+  case 'upcat':{const i=+b.dataset.i;if(i>0){const t=c.cats[i-1];c.cats[i-1]=c.cats[i];c.cats[i]=t;save();render();}break;}
+  case 'delcat':{const i=+b.dataset.i;if(c.cats.length<2)return toast('Mindestens eine Kategorie muss bleiben');
+    if(!confirm(`Kategorie „${c.cats[i].n}“ entfernen? Bereits vergebene Punkte bleiben erhalten.`))return;c.cats.splice(i,1);save();render();break;}
+  case 'newgoal':{const s=goalSum(c);
+    if(!confirm(`Ziel „${c.goal.reward}“ mit ${s} Punkten abschließen und den Balken auf 0 setzen?\n(Die Einzelpunkte bleiben in der Statistik unter „Gesamt“ erhalten.)`))return;
+    c.history.push({reward:c.goal.reward,target:c.goal.target,sum:s,start:c.goal.start,end:Date.now()});
+    c.goal.start=Date.now();const r=prompt('Belohnung für das neue Ziel:',c.goal.reward);if(r&&r.trim())c.goal.reward=r.trim();
+    save();render();toast('Neues Ziel gestartet 🚀');break;}
+  case 'export':exportData();break;
+  case 'clearpts':if(confirm(`Alle Punkte und Ziele der Klasse „${c.name}“ löschen?\nDas kann nicht rückgängig gemacht werden.`)){c.events=[];c.history=[];c.goal.start=Date.now();save();render();toast('Punkte gelöscht');}break;
+  case 'reset':if(confirm('ALLE Klassen und Punkte löschen?\nTipp: vorher eine Sicherung exportieren.')&&confirm('Wirklich alles endgültig löschen?')){S=defaults();save();view='teacher';render();}break;
+  }
+}
+
+/* ---------- Sheet, Toast, Feier ---------- */
+function openSheet(sid){
+  const c=C(),s=c.students.find(x=>x.id===sid);if(!s)return;
+  const sh=$('#sheet');sh.className='';
+  sh.innerHTML=`<div class="sh"><h3>${esc(s.name)}</h3><div class="cats">
+    ${c.cats.map(k=>`<button class="cat" data-act="pick" data-s="${sid}" data-c="${k.id}" data-p="${k.p}"><span class="e">${esc(k.e)}</span>${esc(k.n)}<small>+${k.p}</small></button>`).join('')}
+    <button class="cat neg" data-act="pick" data-s="${sid}" data-c="neg" data-p="-1"><span class="e">↩︎</span>Korrektur<small>−1</small></button></div>
+    <button class="btn sec" data-act="close" style="width:100%;margin-top:12px">Abbrechen</button></div>`;
+  sheetAt=Date.now();sh.classList.add('on');
+}
+function closeSheet(){const sh=$('#sheet');sh.className='';sh.innerHTML='';}
+function toast(html,withUndo){
+  const t=$('#toast');t.innerHTML=html+(withUndo?'<button data-act="undo">Rückgängig</button>':'');t.classList.add('on');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('on'),3500);
+}
+function celebrate(c){
+  confetti();
+  const sh=$('#sheet');sh.className='on center';
+  sh.innerHTML=`<div class="sh"><div style="font-size:64px">🎉</div><h3 style="font-size:26px">Klassenziel erreicht!</h3><p style="font-size:18px">Belohnung: <b>${esc(c.goal.reward)}</b></p><button class="btn" data-act="close" style="width:100%">Super!</button></div>`;
+  sheetAt=Date.now();
+}
+function confetti(){
+  const cv=$('#fx'),x=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=innerWidth,H=innerHeight;
+  cv.width=W*dpr;cv.height=H*dpr;x.scale(dpr,dpr);
+  const cols=['#4f46e5','#7c3aed','#f59e0b','#16a34a','#ec4899','#06b6d4'];
+  const P=Array.from({length:180},()=>({x:W/2,y:H/3,vx:(Math.random()-.5)*16,vy:-Math.random()*15-4,r:Math.random()*7+4,c:cols[Math.random()*cols.length|0],a:Math.random()*6,va:(Math.random()-.5)*.3}));
+  let f=0;(function tick(){x.clearRect(0,0,W,H);
+    for(const p of P){p.vy+=.35;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.a+=p.va;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);x.restore();}
+    if(++f<220)requestAnimationFrame(tick);else x.clearRect(0,0,W,H);})();
+}
+
+/* ---------- Eingaben ---------- */
+document.addEventListener('click',e=>{
+  if(e.target.id==='sheet'){closeSheet();return;}
+  const b=e.target.closest('[data-act]');if(!b||b.tagName==='SELECT'||b.type==='file')return;
+  act(b.dataset.act,b);
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.act==='cls'){S.active=t.value;save();render();return;}
+  if(t.dataset.act==='import'){importFile(t.files[0]);t.value='';return;}
+  const f=t.dataset.f;if(!f||f==='students')return;
+  const c=C(),row=t.closest('[data-i]'),i=row?+row.dataset.i:-1;
+  switch(f){
+    case 'cname':c.name=t.value.trim()||c.name;break;
+    case 'ce':c.cats[i].e=t.value.trim()||'•';break;
+    case 'cn':c.cats[i].n=t.value.trim()||'Kategorie';break;
+    case 'cp':c.cats[i].p=Math.max(1,Math.min(10,parseInt(t.value,10)||1));t.value=c.cats[i].p;break;
+    case 'reward':c.goal.reward=t.value.trim()||'Belohnung';break;
+    case 'target':c.goal.target=Math.max(1,parseInt(t.value,10)||1);t.value=c.goal.target;break;
+    default:return;
+  }
+  save();
+});
+/* Kurz tippen = Schnellpunkt, lange drücken = Kategorie */
+let lp=null;
+function cancelLp(){if(!lp)return;clearTimeout(lp.timer);lp.t.classList.remove('pressing');lp=null;}
+document.addEventListener('pointerdown',e=>{
+  const t=e.target.closest('.tile');if(!t||view!=='teacher')return;
+  cancelLp();t.classList.add('pressing');
+  lp={t,x:e.clientX,y:e.clientY,fired:false,timer:setTimeout(()=>{if(!lp)return;lp.fired=true;t.classList.remove('pressing');openSheet(t.dataset.sid);},450)};
+});
+document.addEventListener('pointermove',e=>{if(lp&&!lp.fired&&Math.hypot(e.clientX-lp.x,e.clientY-lp.y)>12)cancelLp();});
+document.addEventListener('pointerup',()=>{
+  if(!lp)return;const {t,fired,timer}=lp;clearTimeout(timer);t.classList.remove('pressing');lp=null;
+  if(!fired){const k=C().cats[0];if(k)addEvent(t.dataset.sid,k.id,k.p);}
+});
+document.addEventListener('pointercancel',cancelLp);
+document.addEventListener('contextmenu',e=>{if(e.target.closest('.tile'))e.preventDefault();});
+
+/* ---------- Start ---------- */
+render();
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
+if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
